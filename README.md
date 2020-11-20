@@ -72,6 +72,10 @@ To test this library without writing Go, you can run a pktls server/client pair 
     ./pktls genkey > client.priv
     ./pktls pubkey < client.priv > client.pub
 
+    # dependency required for test{srv,cl}, but 'go get' outside of a module won't
+    # download it for us.
+    go get github.com/golang/glog
+
     go build code.hackerspace.pl/q3k/pktls/cmd/testsrv
     ./testsrv -private_key $(cat server.priv) -allowed $(cat client.pub) -listen 127.0.0.1:1337
 
