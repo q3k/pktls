@@ -32,7 +32,7 @@ Key Generation
 --------------
 
     go get code.hackerspace.pl/q3k/pktls
-    go build code.hackerspace.pl/q3k/pkgtls/cmd/pktls
+    go build code.hackerspace.pl/q3k/pktls/cmd/pktls
 
     ./pktls genkey > server.priv
     ./pktls pubkey < server.priv > server.pub
@@ -65,18 +65,18 @@ To test this library without writing Go, you can run a pktls server/client pair 
 
     
     go get code.hackerspace.pl/q3k/pktls
-    go build code.hackerspace.pl/q3k/pkgtls/cmd/pktls
+    go build code.hackerspace.pl/q3k/pktls/cmd/pktls
 
     ./pktls genkey > server.priv
     ./pktls pubkey < server.priv > server.pub
     ./pktls genkey > client.priv
     ./pktls pubkey < client.priv > client.pub
 
-    go build code.hackerspace.pl/q3k/pkgtls/cmd/testsrv
+    go build code.hackerspace.pl/q3k/pktls/cmd/testsrv
     ./testsrv -private_key $(cat server.priv) -allowed $(cat client.pub) -listen 127.0.0.1:1337
 
     # and on another terminal:
-    go build code.hackerspace.pl/q3k/pkgtls/cmd/testcl
+    go build code.hackerspace.pl/q3k/pktls/cmd/testcl
     ./testcl -private_key $(cat client.priv) -remote_key $(cat server.pub) -remote 127.0.0.1:1337
 
 You should observe the client receiving a hello message from the server (”yo”), and the server being able to introspect the identity of the client.
