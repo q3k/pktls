@@ -2,14 +2,11 @@ package pktls
 
 import (
 	"bytes"
-	"crypto"
 	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/asn1"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -32,30 +29,6 @@ var (
 	ErrWrongIdentity = errors.New("unknown identity")
 )
 
-// Workaround for https://github.com/golang/go/issues/26676 in Go's crypto/x509. Specifically Go
-// violates Section 4.2.1.2 of RFC 5280 without this.
-// Fixed for 1.15 in https://go-review.googlesource.com/c/go/+/227098/.
-//
-// Taken from https://github.com/FiloSottile/mkcert/blob/master/cert.go#L295 written by one of Go's
-// crypto engineers
-func calculateSKID(pubKey crypto.PublicKey) ([]byte, error) {
-	spkiASN1, err := x509.MarshalPKIXPublicKey(pubKey)
-	if err != nil {
-		return nil, err
-	}
-
-	var spki struct {
-		Algorithm        pkix.AlgorithmIdentifier
-		SubjectPublicKey asn1.BitString
-	}
-	_, err = asn1.Unmarshal(spkiASN1, &spki)
-	if err != nil {
-		return nil, err
-	}
-	skid := sha1.Sum(spki.SubjectPublicKey.Bytes)
-	return skid[:], nil
-}
-
 func (p PrivateKey) GenerateTLS(mode TLSMode) (*tls.Certificate, error) {
 	private := ed25519.PrivateKey(p)
 	public := private.Public()
@@ -64,11 +37,6 @@ func (p PrivateKey) GenerateTLS(mode TLSMode) (*tls.Certificate, error) {
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate serial number: %w", err)
-	}
-
-	skid, err := calculateSKID(public)
-	if err != nil {
-		return nil, fmt.Errorf("failed to calculate subject key DI: %w", err)
 	}
 
 	template := x509.Certificate{
@@ -80,8 +48,6 @@ func (p PrivateKey) GenerateTLS(mode TLSMode) (*tls.Certificate, error) {
 		NotAfter:              unknownNotAfter,
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		BasicConstraintsValid: true,
-		SubjectKeyId:          skid,
-		AuthorityKeyId:        skid,
 	}
 
 	switch mode {
